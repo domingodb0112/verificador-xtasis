@@ -32,7 +32,7 @@
       margin-top: 20px;
       padding: 12px 24px;
       font-size: 18px;
-      background-color: #ff0055;
+      background-color: #444;
       border: none;
       border-radius: 8px;
       color: white;
@@ -40,7 +40,7 @@
     }
 
     button:hover {
-      background-color: #e6004c;
+      background-color: #666;
     }
   </style>
 </head>
@@ -50,10 +50,13 @@
 
   <div id="reader"></div>
   <div id="resultado"></div>
-  <button id="reanudar" style="display:none;" onclick="reiniciarScanner()">Volver a escanear</button>
+
+  <!-- Botones de reintento -->
+  <button id="reanudarInvalido" style="display:none;" onclick="reiniciarScanner()">Volver a escanear</button>
+  <button id="reanudarValido" style="display:none;" onclick="reiniciarScanner()">Escanear otro código</button>
 
   <script>
-    const idsValidos = ["abc123", "def456", "xyz789"]; // Aquí pon los IDs válidos desencriptados
+    const idsValidos = ["abc123", "def456", "xyz789"]; // IDs válidos ya decodificados
 
     const html5QrCode = new Html5Qrcode("reader");
 
@@ -75,31 +78,32 @@
 
             if (valido) {
               document.getElementById("resultado").innerHTML = `<p class="success">✅ Código válido</p>`;
+              document.getElementById("reanudarValido").style.display = "inline-block";
             } else {
               document.getElementById("resultado").innerHTML = `<p class="error">❌ Código inválido</p>`;
-              document.getElementById("reanudar").style.display = "inline-block";
+              document.getElementById("reanudarInvalido").style.display = "inline-block";
             }
           }).catch(err => {
             document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al detener la cámara: ${err}</p>`;
-            document.getElementById("reanudar").style.display = "inline-block";
+            document.getElementById("reanudarInvalido").style.display = "inline-block";
           });
         },
         error => {
-          // Ignorar errores de escaneo continuo
+          // se puede ignorar errores de escaneo
         }
       ).catch(err => {
         document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al iniciar cámara: ${err}</p>`;
-        document.getElementById("reanudar").style.display = "inline-block";
+        document.getElementById("reanudarInvalido").style.display = "inline-block";
       });
     }
 
     function reiniciarScanner() {
       document.getElementById("resultado").innerHTML = "";
-      document.getElementById("reanudar").style.display = "none";
+      document.getElementById("reanudarInvalido").style.display = "none";
+      document.getElementById("reanudarValido").style.display = "none";
       escanearQR();
     }
 
-    // Inicia al cargar
     escanearQR();
   </script>
 
