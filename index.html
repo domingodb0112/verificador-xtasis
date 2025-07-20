@@ -53,32 +53,44 @@
   <button id="reanudar" style="display:none;" onclick="reiniciarScanner()">Volver a escanear</button>
 
   <script>
-    const idsValidos = ["abc123", "def456", "xyz789"]; // Aquí van tus IDs válidos desencriptados
+    const idsValidos = ["abc123", "def456", "xyz789"]; // Aquí pon los IDs válidos desencriptados
 
     const html5QrCode = new Html5Qrcode("reader");
 
     function escanearQR() {
       html5QrCode.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: 250
-        },
+        { fps: 10, qrbox: 250 },
         qrCodeMessage => {
           html5QrCode.stop().then(() => {
-            const mensaje = atob(qrCodeMessage); // Desencripta Base64
-            if (idsValidos.includes(mensaje)) {
+            let decoded = "";
+            let valido = false;
+
+            try {
+              decoded = atob(qrCodeMessage.trim());
+              valido = idsValidos.includes(decoded);
+            } catch (e) {
+              valido = false;
+            }
+
+            if (valido) {
               document.getElementById("resultado").innerHTML = `<p class="success">✅ Código válido</p>`;
             } else {
               document.getElementById("resultado").innerHTML = `<p class="error">❌ Código inválido</p>`;
               document.getElementById("reanudar").style.display = "inline-block";
             }
+          }).catch(err => {
+            document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al detener la cámara: ${err}</p>`;
+            document.getElementById("reanudar").style.display = "inline-block";
           });
         },
-        errorMessage => {
-          // Silenciar errores
+        error => {
+          // Ignorar errores de escaneo continuo
         }
-      );
+      ).catch(err => {
+        document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al iniciar cámara: ${err}</p>`;
+        document.getElementById("reanudar").style.display = "inline-block";
+      });
     }
 
     function reiniciarScanner() {
@@ -87,10 +99,9 @@
       escanearQR();
     }
 
-    // Inicia escaneo al cargar
+    // Inicia al cargar
     escanearQR();
   </script>
 
 </body>
 </html>
-
