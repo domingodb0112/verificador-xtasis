@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verificador QR - MODULAR XTASIS</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #000; color: white; }
+    #reader { width: 300px; margin: auto; }
+    #resultado { font-size: 1.2em; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Escanea tu QR</h1>
+  <div id="reader"></div>
+  <div id="resultado">Esperando escaneo...</div>
+
+  <script>
+    const validIDs = ['ID001', 'ID002', 'ID003', 'ID004', 'ID005'];
+
+    function decodificarQR(encoded) {
+      try {
+        const decoded = atob(encoded); // decodifica Base64
+        const parts = decoded.split('|');
+        const id = parts[0];
+        return validIDs.includes(id) ? 
+          `✅ Acceso concedido para ${id}` : 
+          `❌ Acceso denegado para ${id}`;
+      } catch (e) {
+        return "❌ Código inválido";
+      }
+    }
+
+    function escanearQR() {
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          document.getElementById("resultado").innerText = decodificarQR(qrCodeMessage);
+          html5QrCode.stop();
+        },
+        errorMessage => {}
+      ).catch(err => {
+        document.getElementById("resultado").innerText = "Error al iniciar cámara";
+      });
+    }
+
+    escanearQR();
+  </script>
+
+</body>
+</html>
