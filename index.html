@@ -67,7 +67,8 @@
       const encontrado = datosValidos.find(e => e.id_base64.trim() === qrContenido);
 
       if (encontrado) {
-        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id_normal})`;
+        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} ${encontrado.apellido} (ID: ${encontrado.id_normal})`;
+
       } else {
         resultado.innerText = `❌ Código no encontrado en la base de datos.`;
       }
