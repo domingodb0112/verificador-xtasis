@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Verificador QR</title>
+  <title>MODULAR XTASIS - Verificador QR</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
@@ -10,21 +10,15 @@
       background: #000;
       color: #fff;
       font-size: 20px;
-      margin: 0;
-      padding: 20px;
     }
     button {
       padding: 10px 20px;
       font-size: 18px;
       margin-top: 20px;
-      cursor: pointer;
     }
     #reader {
       width: 300px;
-      margin: 20px auto;
-    }
-    #resultado {
-      margin-top: 20px;
+      margin: auto;
     }
   </style>
 </head>
@@ -38,13 +32,22 @@
     const urlDatos = "https://opensheet.elk.sh/1mkgKBY20YaG_7Y7x3R9MYGhI1tyJ10QZVtcYpFepbmg/IDs";
     let datosValidos = [];
 
+    // Decodificador de Base64
+    function decodeBase64(str) {
+      try {
+        return atob(str).trim();
+      } catch (e) {
+        return null;
+      }
+    }
+
     function cargarDatos() {
       return fetch(urlDatos)
         .then(res => res.json())
         .then(data => {
           datosValidos = data;
         })
-        .catch(err => {
+        .catch(() => {
           document.getElementById("resultado").innerText = "⚠️ Error cargando la base de datos.";
         });
     }
@@ -62,21 +65,27 @@
           html5QrCode.stop();
           verificarCodigo(qrCodeMessage.trim());
         },
-        errorMessage => {
-          // puedes mostrar errores aquí si lo deseas
-        }
+        errorMessage => {}
       );
     }
 
-    function verificarCodigo(codigo) {
-      const encontrado = datosValidos.find(e => e.id.trim() === codigo.trim());
+    function verificarCodigo(qrContenido) {
+      const codigoDecodificado = decodeBase64(qrContenido);
       const resultado = document.getElementById("resultado");
       const boton = document.getElementById("reiniciar");
 
+      if (!codigoDecodificado) {
+        resultado.innerText = "❌ Código inválido (no es Base64 válido)";
+        boton.style.display = "inline-block";
+        return;
+      }
+
+      const encontrado = datosValidos.find(e => e.id.trim() === codigoDecodificado);
+
       if (encontrado) {
-        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id.trim()})`;
+        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id})`;
       } else {
-        resultado.innerText = `❌ Código inválido.`;
+        resultado.innerText = `❌ Código no encontrado en la base de datos.`;
       }
 
       boton.style.display = "inline-block";
