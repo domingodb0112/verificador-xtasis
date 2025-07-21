@@ -1,114 +1,94 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Verificador QR - MODULAR XTASIS</title>
+  <title>Verificador QR</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      background-color: #000;
+      background: #000;
       color: #fff;
-      font-size: 22px;
+      font-size: 20px;
+      margin: 0;
       padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
     }
     #reader {
       width: 300px;
-      margin: 30px auto;
+      margin: 20px auto;
     }
-    .success {
-      color: #00ff00;
-      font-weight: bold;
-    }
-    .error {
-      color: #ff3333;
-      font-weight: bold;
-    }
-    button {
+    #resultado {
       margin-top: 20px;
-      padding: 12px 24px;
-      font-size: 18px;
-      background-color: #444;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #666;
     }
   </style>
 </head>
 <body>
-
-  <h1>Verificador QR - MODULAR XTASIS</h1>
+  <h1>MODULAR XTASIS - Verificador QR</h1>
   <div id="reader"></div>
-  <div id="resultado"></div>
-  <button id="reanudarBtn" style="display:none;" onclick="reiniciarScanner()">Escanear otro código</button>
+  <p id="resultado"></p>
+  <button id="reiniciar" style="display:none;">Escanear otro código</button>
 
   <script>
-    // Base de datos simulada con IDs codificados
-    const participantes = {
-      "abc123": { nombre: "Luis Mendoza", id: "abc123" },
-      "def456": { nombre: "Andrea Soto", id: "def456" },
-      "xyz789": { nombre: "Raúl Gutiérrez", id: "xyz789" }
-    };
+    const urlDatos = "https://opensheet.elk.sh/1mkgKBY20YaG_7Y7x3R9MYGhI1tyJ10QZVtcYpFepbmg/IDs";
+    let datosValidos = [];
 
-    const html5QrCode = new Html5Qrcode("reader");
+    function cargarDatos() {
+      return fetch(urlDatos)
+        .then(res => res.json())
+        .then(data => {
+          datosValidos = data;
+        })
+        .catch(err => {
+          document.getElementById("resultado").innerText = "⚠️ Error cargando la base de datos.";
+        });
+    }
 
-    function escanearQR() {
+    function iniciarScanner() {
+      document.getElementById("resultado").innerText = "";
+      document.getElementById("reiniciar").style.display = "none";
+
+      const html5QrCode = new Html5Qrcode("reader");
+
       html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         qrCodeMessage => {
-          html5QrCode.stop().then(() => {
-            let decoded = "";
-            let valido = false;
-
-            try {
-              decoded = atob(qrCodeMessage.trim()); // decodifica Base64
-              valido = participantes.hasOwnProperty(decoded);
-            } catch (e) {
-              valido = false;
-            }
-
-            if (valido) {
-              const persona = participantes[decoded];
-              document.getElementById("resultado").innerHTML = `
-                <p class="success">✅ Código válido</p>
-                <p><strong>Nombre:</strong> ${persona.nombre}</p>
-                <p><strong>ID:</strong> ${persona.id}</p>
-              `;
-            } else {
-              document.getElementById("resultado").innerHTML = `
-                <p class="error">❌ Código inválido</p>
-              `;
-            }
-
-            document.getElementById("reanudarBtn").style.display = "inline-block";
-          }).catch(err => {
-            document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al detener la cámara: ${err}</p>`;
-            document.getElementById("reanudarBtn").style.display = "inline-block";
-          });
+          html5QrCode.stop();
+          verificarCodigo(qrCodeMessage.trim());
         },
-        error => {
-          // Ignora errores al escanear
+        errorMessage => {
+          // puedes mostrar errores aquí si lo deseas
         }
-      ).catch(err => {
-        document.getElementById("resultado").innerHTML = `<p class="error">⚠️ Error al iniciar la cámara: ${err}</p>`;
-        document.getElementById("reanudarBtn").style.display = "inline-block";
-      });
+      );
     }
 
-    function reiniciarScanner() {
-      document.getElementById("resultado").innerHTML = "";
-      document.getElementById("reanudarBtn").style.display = "none";
-      escanearQR();
+    function verificarCodigo(codigo) {
+      const encontrado = datosValidos.find(e => e.id.trim() === codigo.trim());
+      const resultado = document.getElementById("resultado");
+      const boton = document.getElementById("reiniciar");
+
+      if (encontrado) {
+        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id.trim()})`;
+      } else {
+        resultado.innerText = `❌ Código inválido.`;
+      }
+
+      boton.style.display = "inline-block";
     }
 
-    escanearQR();
+    document.getElementById("reiniciar").onclick = () => {
+      iniciarScanner();
+    };
+
+    cargarDatos().then(() => {
+      iniciarScanner();
+    });
   </script>
-
 </body>
 </html>
