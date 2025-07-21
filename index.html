@@ -32,15 +32,6 @@
     const urlDatos = "https://opensheet.elk.sh/1mkgKBY20YaG_7Y7x3R9MYGhI1tyJ10QZVtcYpFepbmg/IDs";
     let datosValidos = [];
 
-    // Decodificador de Base64
-    function decodeBase64(str) {
-      try {
-        return atob(str).trim();
-      } catch (e) {
-        return null;
-      }
-    }
-
     function cargarDatos() {
       return fetch(urlDatos)
         .then(res => res.json())
@@ -70,20 +61,13 @@
     }
 
     function verificarCodigo(qrContenido) {
-      const codigoDecodificado = decodeBase64(qrContenido);
       const resultado = document.getElementById("resultado");
       const boton = document.getElementById("reiniciar");
 
-      if (!codigoDecodificado) {
-        resultado.innerText = "❌ Código inválido (no es Base64 válido)";
-        boton.style.display = "inline-block";
-        return;
-      }
-
-      const encontrado = datosValidos.find(e => e.id.trim() === codigoDecodificado);
+      const encontrado = datosValidos.find(e => e.id_base64.trim() === qrContenido);
 
       if (encontrado) {
-        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id})`;
+        resultado.innerText = `✅ Acceso concedido a: ${encontrado.nombre} (ID: ${encontrado.id_normal})`;
       } else {
         resultado.innerText = `❌ Código no encontrado en la base de datos.`;
       }
